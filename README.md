@@ -11,7 +11,7 @@
 
 1. Установить Python **3.10.X** [отсюда](https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe) и нажать галочку добавления в PATH.
 2. Установить [git](https://git-scm.com/download/win). 
-3. Клонировать репозиторий.
+3. Скачать репозиторий.
    ```
    git clone https://github.com/22ist1p/drones.git
    cd drones
