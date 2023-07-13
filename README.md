@@ -16,6 +16,16 @@
    git clone https://github.com/22ist1p/drones.git
    cd drones
    ```
+4. Установить виртуальное окружение.
+  ```
+  python -m venv venv
+  Windows: .\venv\Scripts\Activate.bat
+  Linux: ./venv/Scripts/activate
+  ```
+5. Установить зависимости. Если есть видеокарта NVIDIA, то устанавливать из файла `requiriments_cuda.txt`
+  ```
+  pip install -r requiriments.txt
+  ```
 
 ## Как включить изменения в репозиторий
 
