@@ -22,9 +22,9 @@
   Windows: .\venv\Scripts\Activate.bat
   Linux: ./venv/Scripts/activate
   ```
-5. Установить зависимости. Если есть видеокарта NVIDIA, то устанавливать из файла `requiriments_cuda.txt`
+5. Установить зависимости. Если есть видеокарта NVIDIA, то устанавливать из файла `requirements_cuda.txt`
   ```
-  pip install -r requiriments.txt
+  pip install -r requirements.txt
   ```
 
 ## Как включить изменения в репозиторий
