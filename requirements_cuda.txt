@@ -1,5 +1,5 @@
 ultralytics
-djitellopy
+git+https://github.com/22ist1p/DJITelloPy.git#egg=djitellopy
 --index-url https://download.pytorch.org/whl/cu118
 torch
 torchvision
