@@ -19,7 +19,10 @@ locaddr = (host,port)
 # Create a UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-tello_address = ('192.168.10.1', 8889)
+try:
+    tello_address = (sys.argv[1], 8889)
+except Exception:
+    tello_address = ('192.168.10.1', 8889)
 
 sock.bind(locaddr)
 
@@ -48,7 +51,7 @@ recvThread.start()
 while True: 
 
     try:
-        msg = input("> ")
+        msg = input("")
 
         if not msg:
             break  
