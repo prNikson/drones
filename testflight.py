@@ -4,8 +4,8 @@ from multiprocessing.pool import ThreadPool
 
 droneIps = [
     #"192.168.0.118",
-    "192.168.0.5",
-    "192.168.0.170"
+    #"192.168.0.5",
+    #"192.168.0.170"
 ]
 tellos = []
 
