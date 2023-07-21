@@ -5,7 +5,7 @@
 import subprocess
 import ipaddress
 from subprocess import Popen, PIPE
-from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 
 # Create the network
 # The IP below is associated with the TP-Link wireless router
@@ -26,7 +26,7 @@ def scan(ip):
     return res
 
 if __name__ == '__main__':
-    with Pool(32) as p:
+    with ThreadPool(32) as p:
         p.map(scan, (str(ip) for ip in ip_net.hosts()))
     input("Done...")
 
