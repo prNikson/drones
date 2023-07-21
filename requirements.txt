@@ -1,2 +1,3 @@
 ultralytics
+streamlit
 git+https://github.com/22ist1p/DJITelloPy.git#egg=djitellopy
