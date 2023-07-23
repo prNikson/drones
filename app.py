@@ -1,12 +1,22 @@
 import logging
 import time
+
 import streamlit as st
-from djitellopy import Tello, TelloException
+
 from multiprocessing.pool import ThreadPool
 
-drones_ip = ['192.168.0.120', '192.168.0.121',
-             '192.168.0.122', '192.168.0.123', '192.168.0.124']
-drones = list()
+from djitellopy import Tello, TelloException
+
+
+drones_ip = [
+    '192.168.0.120',
+    '192.168.0.121',
+    '192.168.0.122',
+    '192.168.0.123',
+    '192.168.0.124'
+]
+
+drones: list[Tello]
 
 
 def calculate_ports(ip):
@@ -16,7 +26,10 @@ def calculate_ports(ip):
 
 
 def connect_drone(drone_index, drone_ip):
-    time.sleep(drone_index / 200) # возможно не нужно, по идее должно предотвратить конфликт на 8890 порте
+
+    # возможно не нужно, по идее должно предотвратить конфликт на 8890 порте
+    time.sleep(drone_index / 200)
+
     try:
         state_port, vs_port = calculate_ports(drone_ip)
         drone = Tello(host=drone_ip, vs_udp=vs_port)
@@ -48,6 +61,6 @@ def page(index):
 
 with st.sidebar:
     st.header('Все дроны: ')
-    for index in range(len(drones_ip)):
-        st.button(f"Drone {index+1}", on_click=page,
-                  args=(index,), disabled=True)
+    for index, drone in enumerate(drones):
+        st.button(f"Drone {index}", on_click=page,
+                  args=(index,), disabled=(drone is None))
