@@ -8,7 +8,7 @@ from multiprocessing.pool import ThreadPool
 from djitellopy import Tello, TelloException
 
 
-drones_ip = [
+drone_ips = [
     '192.168.0.120',
     '192.168.0.121',
     '192.168.0.122',
@@ -49,11 +49,11 @@ def connect_all(ips):
         return list(pool.starmap(connect_drone, enumerate(ips)))
 
 
-drones = connect_all(drones_ip)
+drones = connect_all(drone_ips)
 
 
 def page(index):
-    st.header(drones_ip[index])
+    st.header(drone_ips[index])
     frame_window = st.image([])
     while True:
         frame_window.image(drones[index].get_frame_read().frame)
@@ -64,12 +64,12 @@ with st.sidebar:
 
     for index, drone in enumerate(drones):
 
-        with st.expander(f"Дрон №{index} ({drones_ip[index]})"):
+        with st.expander(f"Дрон №{index} ({drone_ips[index]})"):
             column_info, column_camera = st.columns(2)
 
             info = f"| Статус | {'Подключен' if drone else 'Отсоединен'} |\n" \
                    f"|--------|------------------------------------------|\n" \
-                   f"| IP     | {drones_ip[index]}                       |\n" \
+                   f"| IP     | {drone_ips[index]}                       |\n" \
 
             if drone:
                 info += f"| 🔋 Батарея | {drone.get_battery()}% |\n"
