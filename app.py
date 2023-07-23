@@ -46,7 +46,7 @@ def connect_drone(drone_index, drone_ip):
 @st.cache_data
 def connect_all(ips):
     with ThreadPool(len(ips)) as pool:
-        return list(pool.map(connect_drone, enumerate(ips)))
+        return list(pool.starmap(connect_drone, enumerate(ips)))
 
 
 drones = connect_all(drones_ip)
