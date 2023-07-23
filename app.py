@@ -82,4 +82,4 @@ with st.sidebar:
                     st.image(drones[index].get_frame_read().frame)
 
                     st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
-                              args=(index,), disabled=(drone is None))
+                              args=(index,))
