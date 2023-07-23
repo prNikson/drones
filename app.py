@@ -61,6 +61,25 @@ def page(index):
 
 with st.sidebar:
     st.header('Все дроны: ')
+
     for index, drone in enumerate(drones):
-        st.button(f"Drone {index}", on_click=page,
-                  args=(index,), disabled=(drone is None))
+
+        with st.expander(f"Дрон №{index} ({drones_ip[index]})"):
+            column_info, column_camera = st.columns(2)
+
+            info = f"| Статус | {'Подключен' if drone else 'Отсоединен'} |\n" \
+                   f"|--------|------------------------------------------|\n" \
+                   f"| IP     | {drones_ip[index]}                       |\n" \
+
+            if drone:
+                info += f"| 🔋 Батарея | {drone.get_battery()}% |\n"
+
+            with column_info:
+                st.write(info)
+
+            with column_camera:
+                if drone:
+                    st.image(drones[index].get_frame_read().frame())
+
+                    st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
+                              args=(index,), disabled=(drone is None))
