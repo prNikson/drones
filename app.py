@@ -1,4 +1,5 @@
 import logging
+import time
 import streamlit as st
 from djitellopy import Tello, TelloException
 from multiprocessing.pool import ThreadPool
@@ -14,24 +15,25 @@ def calculate_ports(ip):
     return str(9000 + id * 10), str(11111 + id * 10)
 
 
-def connect_drone(ip):
+def connect_drone(drone_index, drone_ip):
+    time.sleep(drone_index / 200) # возможно не нужно, по идее должно предотвратить конфликт на 8890 порте
     try:
-        state, vs = calculate_ports(ip)
-        drone = Tello(host=ip, vs_udp=vs)
+        state_port, vs_port = calculate_ports(drone_ip)
+        drone = Tello(host=drone_ip, vs_udp=vs_port)
         drone.LOGGER.setLevel(logging.WARN)
         drone.connect()
-        drone.set_network_ports(state, vs)
+        drone.set_network_ports(state_port, vs_port)
         drone.streamon()
     except TelloException:
         drone = None
-        print(f"{ip}: Failed to connect to tello.")
+        print(f"{drone_ip}: Failed to connect to tello.")
     return drone
 
 
 @st.cache_data
 def connect_all(ips):
     with ThreadPool(len(ips)) as pool:
-        return list(pool.map(connect_drone, ips))
+        return list(pool.map(connect_drone, enumerate(ips)))
 
 
 drones = connect_all(drones_ip)
