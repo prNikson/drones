@@ -53,8 +53,9 @@ drones = connect_all(drone_ips)
 
 def drone_script():
     for drone in drones:
-        drone.takeoff()
-        drone.land()
+        if drone:
+            drone.takeoff()
+            drone.land()
 
 def page(index):
     st.header(drone_ips[index])
