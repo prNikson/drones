@@ -25,6 +25,12 @@ def calculate_ports(ip):
     return str(9000 + id * 10), str(11111 + id * 10)
 
 def reconnect_drone(index):
+    try:
+        drones[index].end()
+    except AttributeError:
+        pass
+    except TelloException:
+        pass
     drones[index] = connect_drone(index, drone_ips[index])
 
 def connect_drone(drone_index, drone_ip):
@@ -86,10 +92,11 @@ with st.sidebar:
                 st.write(info)
 
             with column_camera:
+                st.button("🔄 Обновить", key=f"drone-reconnect-{index}", on_click=reconnect_drone, args=(index,))
+                
                 if drone:
                     st.image(drones[index].get_frame_read().frame)
 
                     st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
                               args=(index,))
                 
-                st.button("Подключиться повторно", on_click=reconnect_drone, args=(index,))
