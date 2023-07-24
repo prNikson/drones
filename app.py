@@ -85,7 +85,7 @@ with st.sidebar:
     for index, drone in enumerate(state.drones):
 
         with st.expander(f"Дрон №{index} ({state.drone_ips[index]})"):
-            column_info, column_camera = st.columns(2)
+            column_info, column_camera = st.columns([3, 2])
 
             info = f"| Статус | {'Подключен' if drone else 'Отсоединен'} |\n" \
                    f"|--------|------------------------------------------|\n" \
@@ -97,7 +97,7 @@ with st.sidebar:
             with column_info:
                 st.write(info)
 
-            with column_camera:
+            with column_camera:   
                 if drone:
                     st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
                               args=(index,))
