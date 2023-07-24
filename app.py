@@ -24,6 +24,8 @@ def calculate_ports(ip):
     id = int(ip.split('.')[-1])
     return str(9000 + id * 10), str(11111 + id * 10)
 
+def reconnect_drone(index):
+    drones[index] = connect_drone(index, drone_ips[index])
 
 def connect_drone(drone_index, drone_ip):
 
@@ -89,3 +91,5 @@ with st.sidebar:
 
                     st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
                               args=(index,))
+                
+                st.button("Подключиться повторно", on_click=reconnect_drone, args=(index,))
