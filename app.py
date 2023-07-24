@@ -51,10 +51,15 @@ def connect_all(ips):
 
 drones = connect_all(drone_ips)
 
+def drone_script():
+    for drone in drones:
+        drone.takeoff()
+        drone.land()
 
 def page(index):
     st.header(drone_ips[index])
     frame_window = st.image([])
+    st.button("Запустить сценарий", on_click=drone_script)
     while True:
         frame_window.image(drones[index].get_frame_read().frame)
 
