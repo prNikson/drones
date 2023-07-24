@@ -46,10 +46,10 @@ def connect_drone(drone_index, drone_ip):
         drone = Tello(host=drone_ip, vs_udp=vs_port)
         drone.LOGGER.setLevel(logging.WARN)
         drone.connect()
+        drone.set_network_ports(state_port, vs_port)
         if drone.query_sdk_version() < "30":
             print(f"Tello on {drone_ip} is not updated!")
             raise TelloException()
-        drone.set_network_ports(state_port, vs_port)
         drone.streamon()
     except TelloException:
         drone = None
@@ -98,11 +98,7 @@ with st.sidebar:
                 st.write(info)
 
             with column_camera:
-                st.button("🔄 Обновить", key=f"drone-reconnect-{index}", on_click=reconnect_drone, args=(index,))
-                
                 if drone:
-                    st.image(state.drones[index].get_frame_read().frame)
-
                     st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
                               args=(index,))
                 
