@@ -7,31 +7,34 @@ from multiprocessing.pool import ThreadPool
 
 from djitellopy import Tello, TelloException
 
+state = st.session_state
 
-drone_ips = [
-    '192.168.0.120',
-    '192.168.0.121',
-    '192.168.0.122',
-    '192.168.0.123',
-    '192.168.0.124'
+if 'drone_ips' not in state:
+    state.drone_ips = [
+    '192.168.0.176',
+    '192.168.0.185',
+    #'192.168.0.122',
+    #'192.168.0.123',
+    #'192.168.0.124'
 ]
 
-drones: list[Tello]
-
+if 'drones' not in state:
+    state.drones: list[Tello]
 
 def calculate_ports(ip):
     "Первый - для STATE_UDP_PORT, второй - VS_UDP_PORT"
     id = int(ip.split('.')[-1])
-    return str(9000 + id * 10), str(11111 + id * 10)
+    return 9000 + id * 10, 11111 + id * 10
 
 def reconnect_drone(index):
     try:
-        drones[index].end()
+        state.drones[index].end()
     except AttributeError:
         pass
     except TelloException:
         pass
-    drones[index] = connect_drone(index, drone_ips[index])
+    state.drones[index] = connect_drone(index, state.drone_ips[index])
+
 
 def connect_drone(drone_index, drone_ip):
 
@@ -43,6 +46,9 @@ def connect_drone(drone_index, drone_ip):
         drone = Tello(host=drone_ip, vs_udp=vs_port)
         drone.LOGGER.setLevel(logging.WARN)
         drone.connect()
+        if drone.query_sdk_version() < "30":
+            print(f"Tello on {drone_ip} is not updated!")
+            raise TelloException()
         drone.set_network_ports(state_port, vs_port)
         drone.streamon()
     except TelloException:
@@ -57,33 +63,33 @@ def connect_all(ips):
         return list(pool.starmap(connect_drone, enumerate(ips)))
 
 
-drones = connect_all(drone_ips)
+state.drones = connect_all(state.drone_ips)
 
 def drone_script():
-    for drone in drones:
+    for drone in state.drones:
         if drone:
             drone.takeoff()
             drone.land()
 
 def page(index):
-    st.header(drone_ips[index])
+    st.header(state.drone_ips[index])
     frame_window = st.image([])
     st.button("Запустить сценарий", on_click=drone_script)
     while True:
-        frame_window.image(drones[index].get_frame_read().frame)
+        frame_window.image(state.drones[index].get_frame_read().frame)
 
 
 with st.sidebar:
     st.header('Все дроны: ')
 
-    for index, drone in enumerate(drones):
+    for index, drone in enumerate(state.drones):
 
-        with st.expander(f"Дрон №{index} ({drone_ips[index]})"):
+        with st.expander(f"Дрон №{index} ({state.drone_ips[index]})"):
             column_info, column_camera = st.columns(2)
 
             info = f"| Статус | {'Подключен' if drone else 'Отсоединен'} |\n" \
                    f"|--------|------------------------------------------|\n" \
-                   f"| IP     | {drone_ips[index]}                       |\n" \
+                   f"| IP     | {state.drone_ips[index]}                 |\n" \
 
             if drone:
                 info += f"| 🔋 Батарея | {drone.get_battery()}% |\n"
@@ -95,7 +101,8 @@ with st.sidebar:
                 st.button("🔄 Обновить", key=f"drone-reconnect-{index}", on_click=reconnect_drone, args=(index,))
                 
                 if drone:
-                    st.image(drones[index].get_frame_read().frame)
+                    st.image(state.drones[index].get_frame_read().frame)
+                    st.image(state.drones[index].get_frame_read().frame)
 
                     st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
                               args=(index,))
