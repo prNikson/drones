@@ -1,9 +1,9 @@
 import logging
-import time
+import asyncio
+import utils
+import threading
 
 import streamlit as st
-
-from multiprocessing.pool import ThreadPool
 
 from djitellopy import Tello, TelloException
 
@@ -11,76 +11,99 @@ state = st.session_state
 
 if 'drone_ips' not in state:
     state.drone_ips = [
-    '192.168.0.176',
-    '192.168.0.185',
-    #'192.168.0.122',
-    #'192.168.0.123',
-    #'192.168.0.124'
-]
+        '192.168.0.178'
+        # '192.168.0.176',
+        # '192.168.0.185',
+        # '192.168.0.122',
+        # '192.168.0.123',
+        # '192.168.0.124'
+    ]
 
 if 'drones' not in state:
     state.drones: list[Tello]
 
-def calculate_ports(ip):
-    "Первый - для STATE_UDP_PORT, второй - VS_UDP_PORT"
-    id = int(ip.split('.')[-1])
-    return 9000 + id * 10, 11111 + id * 10
 
-def reconnect_drone(index):
+async def connect_drone(drone_index, drone_ip):
     try:
-        state.drones[index].end()
-    except AttributeError:
-        pass
-    except TelloException:
-        pass
-    state.drones[index] = connect_drone(index, state.drone_ips[index])
-
-
-def connect_drone(drone_index, drone_ip):
-
-    # возможно не нужно, по идее должно предотвратить конфликт на 8890 порте
-    time.sleep(drone_index / 200)
-
-    try:
-        state_port, vs_port = calculate_ports(drone_ip)
+        state_port, vs_port = utils.calculate_ports(drone_ip)
         drone = Tello(host=drone_ip, vs_udp=vs_port)
         drone.LOGGER.setLevel(logging.WARN)
         drone.connect()
-        drone.set_network_ports(state_port, vs_port)
+
         if drone.query_sdk_version() < "30":
             print(f"Tello on {drone_ip} is not updated!")
             raise TelloException()
+        drone.set_network_ports(state_port, vs_port)
         drone.streamon()
+        drone.set_video_bitrate(drone.BITRATE_2MBPS)
+        drone.set_video_resolution(drone.RESOLUTION_720P)
+        drone.set_video_fps(drone.FPS_15)
     except TelloException:
         drone = None
         print(f"{drone_ip}: Failed to connect to tello.")
     return drone
 
 
-@st.cache_data
-def connect_all(ips):
-    with ThreadPool(len(ips)) as pool:
-        return list(pool.starmap(connect_drone, enumerate(ips)))
+async def connect_all(ips):
+    return list(
+        await asyncio.gather(
+            *(connect_drone(i, ip) for i, ip in enumerate(ips))
+        )
+    )
 
 
-state.drones = connect_all(state.drone_ips)
+if 'connected' not in state:
+    state.drones = asyncio.run(
+        connect_all(state.drone_ips),
+    )
 
-def drone_script():
-    for drone in state.drones:
-        if drone:
-            drone.takeoff()
-            drone.land()
+state.connected = True
 
-def page(index):
-    st.header(state.drone_ips[index])
-    frame_window = st.image([])
-    st.button("Запустить сценарий", on_click=drone_script)
+
+async def display_images(header_placeholder, video_placeholder):
     while True:
-        frame_window.image(state.drones[index].get_frame_read().frame)
+        await asyncio.sleep(1/30)
+        try:
+            header_placeholder.header(
+                state.drone_ips[state.drone_camera_index])
+            video_placeholder.image(
+                state.drones[state.drone_camera_index].get_frame_read().frame)
+        except AttributeError:
+            pass
+        except TelloException:
+            pass
+        except OSError:
+            pass
+
+
+async def main(header_placeholder, video_placeholder):
+    _ = await asyncio.gather(
+        display_images(header_placeholder, video_placeholder)
+    )
+
+
+def drone_script(state):
+    for drone in state["drones"]:
+        if not drone:
+            continue
+        drone.takeoff()
+        drone.land()
+
+
+def drone_script_runner():
+    thread = threading.Thread(target=drone_script, args=(state,))
+    st.runtime.scriptrunner.add_script_run_ctx(thread)
+    thread.start()
+
+
+header_placeholder = st.empty()
+video_placeholder = st.empty()
+st.button("Запустить сценарий",
+          on_click=drone_script_runner)
 
 
 with st.sidebar:
-    st.header('Все дроны: ')
+    a = st.header('Все дроны: ')
 
     for index, drone in enumerate(state.drones):
 
@@ -97,8 +120,14 @@ with st.sidebar:
             with column_info:
                 st.write(info)
 
-            with column_camera:   
+            with column_camera:
                 if drone:
-                    st.button("Отслеживать", key=f"drone-camera-{index}", on_click=page,
-                              args=(index,))
-                
+                    camera_drone_button = st.button(
+                        "Отслеживать", key=f"drone-camera-{index}")
+                    if camera_drone_button:
+                        state.drone_camera_index = index
+
+if state.connected:
+    asyncio.run(
+        main(header_placeholder, video_placeholder)
+    )
